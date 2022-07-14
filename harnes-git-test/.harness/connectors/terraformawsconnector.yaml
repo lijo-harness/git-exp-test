@@ -1,0 +1,16 @@
+connector:
+  name: terraform-aws-connector
+  identifier: terraformawsconnector
+  description: ""
+  orgIdentifier: orglijo
+  projectIdentifier: CSETest1
+  type: Aws
+  spec:
+    credential:
+      type: ManualConfig
+      spec:
+        accessKey: AKIA5KL7XUCJJJBTIRWE
+        accessKeyRef: null
+        secretKeyRef: awssecretaccesskey
+    delegateSelectors:
+    - docker-delegate
