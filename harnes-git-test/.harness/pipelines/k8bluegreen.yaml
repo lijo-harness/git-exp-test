@@ -1,0 +1,94 @@
+pipeline:
+    name: k8bluegreen
+    identifier: k8bluegreen
+    projectIdentifier: CSETest1
+    orgIdentifier: orglijo
+    tags: {}
+    stages:
+        - stage:
+              name: bluegreendeploy
+              identifier: bluegreendeploy
+              description: ""
+              type: Deployment
+              spec:
+                  serviceConfig:
+                      serviceRef: bgsrv
+                      serviceDefinition:
+                          spec:
+                              variables: []
+                              manifests:
+                                  - manifest:
+                                        identifier: manifest
+                                        type: K8sManifest
+                                        spec:
+                                            store:
+                                                type: Github
+                                                spec:
+                                                    connectorRef: account.harnessgitconnector
+                                                    gitFetchType: Branch
+                                                    paths:
+                                                        - templates
+                                                    repoName: k8manifest
+                                                    branch: main
+                                            skipResourceVersioning: false
+                                  - manifest:
+                                        identifier: values
+                                        type: Values
+                                        spec:
+                                            store:
+                                                type: Github
+                                                spec:
+                                                    connectorRef: account.harnessgitconnector
+                                                    gitFetchType: Branch
+                                                    paths:
+                                                        - ng_values_dockercfg.yaml
+                                                    repoName: k8manifest
+                                                    branch: main
+                              artifacts:
+                                  primary:
+                                      spec:
+                                          connectorRef: DockerTestk8
+                                          imagePath: library/nginx
+                                          tag: <+input>
+                                      type: DockerRegistry
+                          type: Kubernetes
+                  infrastructure:
+                      environmentRef: K8bgEnv
+                      infrastructureDefinition:
+                          type: KubernetesDirect
+                          spec:
+                              connectorRef: k8testcluster
+                              namespace: bg
+                              releaseName: release-<+INFRA_KEY>
+                      allowSimultaneousDeployments: false
+                  execution:
+                      steps:
+                          - step:
+                                name: Stage Deployment
+                                identifier: stageDeployment
+                                type: K8sBlueGreenDeploy
+                                timeout: 10m
+                                spec:
+                                    skipDryRun: false
+                          - step:
+                                name: Swap primary with stage service
+                                identifier: bgSwapServices
+                                type: K8sBGSwapServices
+                                timeout: 10m
+                                spec:
+                                    skipDryRun: false
+                      rollbackSteps:
+                          - step:
+                                name: Swap primary with stage service
+                                identifier: rollbackBgSwapServices
+                                type: K8sBGSwapServices
+                                timeout: 10m
+                                spec:
+                                    skipDryRun: false
+              tags: {}
+              failureStrategies:
+                  - onFailure:
+                        errors:
+                            - AllErrors
+                        action:
+                            type: StageRollback
