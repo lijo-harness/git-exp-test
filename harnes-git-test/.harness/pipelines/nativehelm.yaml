@@ -1,0 +1,64 @@
+pipeline:
+    name: nativehelm
+    identifier: nativehelm
+    projectIdentifier: CSETest1
+    orgIdentifier: orglijo
+    tags: {}
+    stages:
+        - stage:
+              name: Deploy
+              identifier: Deploy
+              description: ""
+              type: Deployment
+              spec:
+                  serviceConfig:
+                      serviceRef: NativeHelmsrv
+                      serviceDefinition:
+                          spec:
+                              variables: []
+                              manifests:
+                                  - manifest:
+                                        identifier: nginx
+                                        type: HelmChart
+                                        spec:
+                                            store:
+                                                type: Http
+                                                spec:
+                                                    connectorRef: Testconnhelm
+                                            chartName: nginx
+                                            chartVersion: ""
+                                            helmVersion: V3
+                                            skipResourceVersioning: false
+                          type: NativeHelm
+                  infrastructure:
+                      environmentRef: K8bgEnv
+                      infrastructureDefinition:
+                          type: KubernetesDirect
+                          spec:
+                              connectorRef: k8testcluster
+                              namespace: bg
+                              releaseName: release-<+INFRA_KEY>
+                      allowSimultaneousDeployments: false
+                  execution:
+                      steps:
+                          - step:
+                                name: Helm Deployment
+                                identifier: helmDeployment
+                                type: HelmDeploy
+                                timeout: 10m
+                                spec:
+                                    skipDryRun: false
+                      rollbackSteps:
+                          - step:
+                                name: Helm Rollback
+                                identifier: helmRollback
+                                type: HelmRollback
+                                timeout: 10m
+                                spec: {}
+              tags: {}
+              failureStrategies:
+                  - onFailure:
+                        errors:
+                            - AllErrors
+                        action:
+                            type: StageRollback
