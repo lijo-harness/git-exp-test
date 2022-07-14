@@ -1,0 +1,11 @@
+connector:
+  name: DockerTestk8
+  identifier: DockerTestk8
+  orgIdentifier: orglijo
+  projectIdentifier: CSETest1
+  type: DockerRegistry
+  spec:
+    dockerRegistryUrl: https://registry.hub.docker.com/v2/
+    providerType: DockerHub
+    auth:
+      type: Anonymous
