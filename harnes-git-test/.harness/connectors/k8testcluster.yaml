@@ -1,0 +1,12 @@
+connector:
+  name: k8testcluster
+  identifier: k8testcluster
+  description: ""
+  orgIdentifier: orglijo
+  projectIdentifier: CSETest1
+  type: K8sCluster
+  spec:
+    credential:
+      type: InheritFromDelegate
+    delegateSelectors:
+    - delegate-lijo
