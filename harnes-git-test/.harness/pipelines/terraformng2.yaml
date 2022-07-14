@@ -1,0 +1,75 @@
+pipeline:
+    name: terraform-ng
+    identifier: terraformng2
+    projectIdentifier: CSETest1
+    orgIdentifier: orglijo
+    tags: {}
+    stages:
+        - stage:
+              name: Deploy
+              identifier: Deploy
+              description: ""
+              type: Deployment
+              spec:
+                  serviceConfig:
+                      serviceRef: terraformservice
+                      serviceDefinition:
+                          spec:
+                              variables: []
+                          type: Kubernetes
+                  infrastructure:
+                      environmentRef: terraformdev
+                      infrastructureDefinition:
+                          type: KubernetesDirect
+                          spec:
+                              connectorRef: k8testcluster
+                              namespace: default
+                              releaseName: release-<+INFRA_KEY>
+                      allowSimultaneousDeployments: false
+                  execution:
+                      steps:
+                          - step:
+                                type: TerraformPlan
+                                name: plan
+                                identifier: plan
+                                spec:
+                                    configuration:
+                                        command: Apply
+                                        configFiles:
+                                            store:
+                                                type: Github
+                                                spec:
+                                                    gitFetchType: Branch
+                                                    connectorRef: account.harnessgitconnector
+                                                    repoName: terraform
+                                                    branch: master
+                                                    folderPath: exercise_1
+                                        secretManagerRef: harnessSecretManager
+                                        varFiles:
+                                            - varFile:
+                                                  identifier: vars
+                                                  spec:
+                                                      content: |-
+                                                          access_key="AKIA5KL7XUCJJJBTIRWE"
+                                                          secret_key="<+secrets.getValue("awssecretaccesskey")>"
+                                                  type: Inline
+                                    provisionerIdentifier: terraplanid
+                                timeout: 10m
+                                failureStrategies: []
+                          - step:
+                                type: TerraformApply
+                                name: apply
+                                identifier: apply
+                                spec:
+                                    configuration:
+                                        type: InheritFromPlan
+                                    provisionerIdentifier: terraplanid
+                                timeout: 10m
+                      rollbackSteps: []
+              tags: {}
+              failureStrategies:
+                  - onFailure:
+                        errors:
+                            - AllErrors
+                        action:
+                            type: StageRollback
