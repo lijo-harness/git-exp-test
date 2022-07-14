@@ -1,0 +1,80 @@
+pipeline:
+    name: terraform-ng-exe2
+    identifier: terraformngexe2
+    projectIdentifier: CSETest1
+    orgIdentifier: orglijo
+    tags: {}
+    stages:
+        - stage:
+              name: terraform-stage
+              identifier: terraformstage
+              description: ""
+              type: Deployment
+              spec:
+                  serviceConfig:
+                      serviceRef: terraformsvc2
+                      serviceDefinition:
+                          spec:
+                              variables: []
+                          type: Kubernetes
+                  infrastructure:
+                      environmentRef: terraformdev
+                      infrastructureDefinition:
+                          type: KubernetesDirect
+                          spec:
+                              connectorRef: k8testcluster
+                              namespace: default
+                              releaseName: release-<+INFRA_KEY>
+                      allowSimultaneousDeployments: false
+                  execution:
+                      steps:
+                          - step:
+                                type: TerraformPlan
+                                name: plan
+                                identifier: plan
+                                spec:
+                                    configuration:
+                                        command: Apply
+                                        configFiles:
+                                            store:
+                                                type: Github
+                                                spec:
+                                                    gitFetchType: Branch
+                                                    connectorRef: account.harnessgitconnector
+                                                    repoName: terraform
+                                                    branch: master
+                                                    folderPath: exercise_2/
+                                        secretManagerRef: harnessSecretManager
+                                        varFiles:
+                                            - varFile:
+                                                  identifier: test
+                                                  spec:
+                                                      content: |-
+                                                          access_key="AKIA5KL7XUCJJJBTIRWE"
+                                                          secret_key="<+secrets.getValue("awssecretaccesskey")>"
+                                                  type: Inline
+                                    provisionerIdentifier: planid
+                                    delegateSelectors:
+                                        - docker-delegate
+                                timeout: 10m
+                                failureStrategies: []
+                          - step:
+                                type: TerraformApply
+                                name: apply
+                                identifier: apply
+                                spec:
+                                    configuration:
+                                        type: InheritFromPlan
+                                    provisionerIdentifier: planid
+                                    delegateSelectors:
+                                        - docker-delegate
+                                timeout: 10m
+                                failureStrategies: []
+                      rollbackSteps: []
+              tags: {}
+              failureStrategies:
+                  - onFailure:
+                        errors:
+                            - AllErrors
+                        action:
+                            type: StageRollback
