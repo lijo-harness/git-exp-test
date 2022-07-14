@@ -1,0 +1,12 @@
+connector:
+  name: aws-connector
+  identifier: awsconnector
+  description: ""
+  orgIdentifier: orglijo
+  projectIdentifier: CSETest1
+  type: K8sCluster
+  spec:
+    credential:
+      type: InheritFromDelegate
+    delegateSelectors:
+    - docker-delegate
